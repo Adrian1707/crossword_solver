@@ -8,29 +8,19 @@ class Crossword
 
   def solve
     [
-      check_rows,
-      check_columns,
-      check_diagonals
+      word_in_rows_or_columns?(grid),
+      word_in_rows_or_columns?(grid.transpose),
+      word_in_diagonals?
     ].any? {|answer| answer == true}
   end
 
-  def check_rows
-    grid.map do |row|
-      row.join
-    end.select do |word|
+  def word_in_rows_or_columns?(grid)
+    grid.map(&:join).select do |word|
       word.include?(word_to_check) || word.reverse.include?(word_to_check)
     end.any?
   end
 
-  def check_columns
-    grid.transpose.map do |row|
-      row.join
-    end.select do |word|
-      word.include?(word_to_check) || word.reverse.include?(word_to_check)
-    end.any?
-  end
-
-  def check_diagonals
+  def word_in_diagonals?
     @diagonals = Set.new
 
     (0..grid.length).to_a.each_with_index do |_, column_index|
