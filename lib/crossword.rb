@@ -15,54 +15,32 @@ class Crossword
   end
 
   def word_in_rows_or_columns?(grid)
-    grid.map(&:join).select do |word|
-      word.include?(word_to_check) || word.reverse.include?(word_to_check)
-    end.any?
+    includes_word_to_check?(grid.map(&:join))
   end
 
   def word_in_diagonals?
     @diagonals = Set.new
-
+    reverse_grid = grid.reverse
     (0..grid.length).to_a.each_with_index do |_, column_index|
-      @diagonals << check_diagonals_go_right_from_top(0, column_index)
+      @diagonals << diagonal_strings(0, column_index, grid)
+      @diagonals << diagonal_strings(0, column_index, reverse_grid)
     end
 
     (0..grid.length).to_a.each_with_index do |_, row_index|
-      @diagonals << check_diagonals_go_down_from_top(row_index, 0)
+      @diagonals << diagonal_strings(row_index, 0, grid)
+      @diagonals << diagonal_strings(row_index, 0, reverse_grid)
     end
 
-    (0..grid.length).to_a.each_with_index do |_, column_index|
-      @diagonals << check_diagonals_go_right_from_bottom(0, column_index)
-    end
-
-    (0..grid.length).to_a.each_with_index do |_, row_index|
-      @diagonals << check_diagonals_go_down_from_bottom(row_index, 0)
-    end
-
-    @diagonals.any? {|word| word.include?(word_to_check) || word.reverse.include?(word_to_check)}
+    includes_word_to_check?(@diagonals)
   end
 
-  def check_diagonals_go_right_from_top(row_index = 0, column_index = 0)
-    return '' if column_index > grid.length - 1 || row_index > grid.length - 1
-    joined_string = grid[row_index][column_index].dup
-    joined_string << check_diagonals_go_right_from_top(row_index+1, column_index+1)
+  def includes_word_to_check?(collection)
+    collection.any? {|word| word.include?(word_to_check) || word.reverse.include?(word_to_check)}
   end
 
-  def check_diagonals_go_down_from_top(row_index = 0, column_index = 0)
+  def diagonal_strings(row_index = 0, column_index = 0, grid)
     return '' if column_index > grid.length - 1 || row_index > grid.length - 1
-    joined_string = grid[row_index][column_index].dup
-    joined_string << check_diagonals_go_down_from_top(row_index+1, column_index+1)
-  end
-
-  def check_diagonals_go_right_from_bottom(row_index = 0, column_index = 0)
-    return '' if column_index > grid.length - 1 || row_index > grid.length - 1
-    joined_string = grid.reverse[row_index][column_index].dup
-    joined_string << check_diagonals_go_right_from_bottom(row_index+1, column_index+1)
-  end
-
-  def check_diagonals_go_down_from_bottom(row_index = 0, column_index = 0)
-    return '' if column_index > grid.length - 1 || row_index > grid.length - 1
-    joined_string = grid.reverse[row_index][column_index].dup
-    joined_string << check_diagonals_go_down_from_bottom(row_index+1, column_index+1)
+    joined_string = grid[row_index][column_index].clone
+    joined_string << diagonal_strings(row_index+1, column_index+1, grid)
   end
 end
